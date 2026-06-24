@@ -51,23 +51,103 @@
             display: flex;
         }
 
-        /* === LOADING SCREEN === */
-        #loading-screen {
+        /* === TELA DE INÍCIO (NOVA) === */
+        #start-screen {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: var(--text-light);
+            text-align: center;
         }
 
-        .loader {
-            width: 80px;
-            height: 80px;
-            border: 8px solid rgba(255,255,255,0.3);
-            border-top: 8px solid var(--secondary);
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-            margin-bottom: 20px;
+        .game-title {
+            font-size: 3.5rem;
+            margin-top: 20px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            letter-spacing: 2px;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .game-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: var(--bg-color);
+            opacity: 0.9;
+        }
+
+        /* Logo feita com CSS */
+        .css-logo {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .css-logo .stem {
+            width: 8px;
+            height: 70px;
+            background: var(--secondary);
+            border-radius: 4px;
+            position: absolute;
+            bottom: 0;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2);
+        }
+
+        .css-logo .leaf {
+            width: 55px;
+            height: 55px;
+            background: var(--primary-light);
+            position: absolute;
+            bottom: 25px;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3), 2px 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .css-logo .leaf.left {
+            border-radius: 50px 0 50px 50px;
+            left: 8px;
+            transform-origin: bottom right;
+            transform: rotate(-20deg);
+        }
+
+        .css-logo .leaf.right {
+            border-radius: 0 50px 50px 50px;
+            right: 8px;
+            transform-origin: bottom left;
+            transform: rotate(20deg);
+        }
+
+        /* Botão de Iniciar Animado */
+        .start-btn {
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 50px;
+            background: var(--secondary);
+            color: var(--text-dark);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            animation: pulseBtn 2s infinite;
+        }
+
+        .start-btn:hover {
+            background: #f9a825;
+            transform: scale(1.05);
+            animation: none; /* Para a animação ao passar o mouse */
+        }
+
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(251, 192, 45, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); }
+        }
 
         /* === PROFILE SCREEN === */
         .card {
@@ -431,10 +511,17 @@
 </head>
 <body>
 
-    <div id="loading-screen" class="screen active">
-        <div class="loader"></div>
-        <h1>AgroRoots</h1>
-        <p>Preparando a terra...</p>
+    <div id="start-screen" class="screen active">
+        <div class="css-logo">
+            <div class="leaf left"></div>
+            <div class="leaf right"></div>
+            <div class="stem"></div>
+        </div>
+        
+        <h1 class="game-title">AgroRoots</h1>
+        <p class="game-subtitle">O Mestre dos Nutrientes</p>
+        
+        <button class="start-btn" onclick="goToProfile()">Começar Jogo</button>
     </div>
 
     <div id="profile-screen" class="screen">
@@ -452,7 +539,7 @@
             </div>
 
             <input type="text" id="username" placeholder="Digite seu nome (Obrigatório)" maxlength="15">
-            <button class="btn" onclick="saveProfile()">Começar Aventura!</button>
+            <button class="btn" onclick="saveProfile()">Continuar</button>
         </div>
     </div>
 
@@ -548,41 +635,4 @@
                     { id: 'K', name: 'Potássio (K)', text: 'Regula a abertura dos estômatos e dá resistência contra secas.' }
                 ]
             },
-            {
-                title: "Macronutrientes Secundários",
-                desc: "Importantes para a estrutura celular e fotossíntese.",
-                pairs: [
-                    { id: 'Ca', name: 'Cálcio (Ca)', text: 'Forma a "parede" das células. Falta queima as bordas das folhas novas.' },
-                    { id: 'Mg', name: 'Magnésio (Mg)', text: 'Fica no centro da clorofila! Falta causa amarelecimento entre as nervuras.' },
-                    { id: 'S', name: 'Enxofre (S)', text: 'Ajuda na formação de proteínas. Falta deixa as folhas novas verde-claras.' }
-                ]
-            },
-            {
-                title: "Micronutrientes (Parte 1)",
-                desc: "A planta precisa em pouca quantidade, mas sem eles, ela sofre!",
-                pairs: [
-                    { id: 'Fe', name: 'Ferro (Fe)', text: 'A falta deixa as folhas novas totalmente amarelas, mas as nervuras continuam verdes.' },
-                    { id: 'Zn', name: 'Zinco (Zn)', text: 'Falta causa "encurtamento" dos galhos e folhas pequenas (roseta).' },
-                    { id: 'B', name: 'Boro (B)', text: 'Falta causa morte das pontas e deixa folhas grossas e quebradiças.' }
-                ]
-            },
-            {
-                title: "Micronutrientes (Parte 2)",
-                desc: "Mais heróis invisíveis atuando na fisiologia da folha.",
-                pairs: [
-                    { id: 'Mn', name: 'Manganês (Mn)', text: 'Falta causa clorose reticulada em folhas novas (fundo amarelo com veias verdes claras).' },
-                    { id: 'Cu', name: 'Cobre (Cu)', text: 'Falta deixa folhas novas retorcidas, deformadas e com cor verde muito escura.' },
-                    { id: 'Mo', name: 'Molibdênio (Mo)', text: 'Deficiência imita a falta de Nitrogênio, causando queima nas margens das folhas mais velhas.' }
-                ]
-            },
-            {
-                title: "Elementos Benéficos",
-                desc: "Não são vitais para todas, mas dão superpoderes às plantas.",
-                pairs: [
-                    { id: 'Si', name: 'Silício (Si)', text: 'Acumula na epiderme da folha, deixando-a mais grossa, ereta e resistente a fungos.' },
-                    { id: 'Co', name: 'Cobalto (Co)', text: 'Essencial para a fixação de N nas leguminosas, garantindo folhas super verdes.' },
-                    { id: 'Ni', name: 'Níquel (Ni)', text: 'Previne o acúmulo tóxico de ureia nas folhas, evitando pontas necrosadas.' }
-                ]
-            },
-            {
-               
+          
