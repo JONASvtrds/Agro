@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroRoots: O Mestre dos Nutrientes</title>
+    <style>
+        /* === VARIÁVEIS CSS === */
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #60ad5e;
+            --primary-dark: #005005;
+            --secondary: #fbc02d;
+            --bg-color: #f1f8e9;
+            --text-dark: #333;
+            --text-light: #fff;
+            --shadow: 0 4px 10px rgba(0,0,0,0.1);
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* === RESET & GLOBAL === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* === TELAS === */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 20px;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* === LOADING SCREEN === */
+        #loading-screen {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--text-light);
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255,255,255,0.3);
+            border-top: 8px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* === PROFILE SCREEN === */
+        .card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        /* Área de Upload de Imagem Ajustada */
+        .upload-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-preview-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px dashed var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .profile-preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .profile-preview-container .placeholder-icon {
+            font-size: 40px;
+            color: #aaa;
+        }
+
+        .file-input-label {
+            background: #e8f5e9;
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            border: 1px solid var(--primary-light);
+        }
+
+        .file-input-label:hover {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        #image-upload {
+            display: none;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn:hover { background: var(--primary-dark); }
+        .btn.secondary-btn { background: var(--secondary); color: var(--text-dark); margin-top: 15px;}
+        .btn.secondary-btn:hover { background: #f9a825; }
+
+        /* === MAIN GAME SCREEN === */
+        header {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rewards {
+            font-weight: bold;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        #game-content {
+            margin-top: 100px;
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            flex-grow: 1;
+            padding-bottom: 100px;
+        }
+
+        .level-info { margin-bottom: 20px; }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .game-board { grid-template-columns: 1fr; gap: 10px;}
+        }
+
+        .column { display: flex; flex-direction: column; gap: 10px; }
+
+        .game-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: 0.2s;
+            border: 3px solid transparent;
+            font-size: 14px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .game-card.selected { border-color: var(--secondary); background: #fffde7; }
+        .game-card.matched { background: var(--primary-light); color: white; cursor: default; border-color: var(--primary-dark); }
+        .game-card.wrong { animation: shake 0.5s; border-color: #d32f2f; background: #ffebee; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        /* === MASCOTE CSS ART (Folhito) === */
+        #mascot-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+        }
+
+        .speech-bubble {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            border-bottom-right-radius: 0;
+            box-shadow: var(--shadow);
+            max-width: 250px;
+            font-size: 14px;
+            display: none;
+            position: relative;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* O Mascote Feito Apenas com CSS */
+        .mascot-css {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-light);
+            border-radius: 0 50% 50% 50%;
+            transform: rotate(45deg);
+            position: relative;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: 0.3s;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .mascot-css:hover { transform: rotate(45deg) scale(1.1); }
+
+        /* Olhos do mascote */
+        .mascot-css::before, .mascot-css::after {
+            content: '';
+            position: absolute;
+            background: white;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transform: rotate(-45deg);
+        }
+
+        .mascot-css::before { top: 25px; left: 10px; box-shadow: inset -2px -2px 0 #333;}
+        .mascot-css::after { top: 10px; left: 25px; box-shadow: inset -2px -2px 0 #333;}
+
+        /* Boquinha do mascote */
+        .mascot-mouth {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid #333;
+            border-radius: 50%;
+            top: 30px;
+            left: 28px;
+            transform: rotate(-45deg);
+        }
+
+        @keyframes float {
+            0%, 100% { top: 0px; }
+            50% { top: -10px; }
+        }
+
+        /* === FOOTER (CRÉDITOS DA ESCOLA) === */
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 10px;
+            color: #777;
+            font-size: 12px;
+            width: 100%;
+        }
+
+        /* === MODAL DE RECOMPENSA === */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: white; padding: 40px; border-radius: 15px;
+            text-align: center; max-width: 400px;
+        }
+        .modal h2 { color: var(--primary); margin-bottom: 10px; }
+        .reward-icon { font-size: 50px; margin: 20px 0; animation: bounce 1s infinite; }
+        
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* === TELA DE VITÓRIA ANIMADA === */
+        #victory-screen {
+            background: linear-gradient(135deg, #1b5e20, #003300);
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .victory-content {
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: zoomIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        @keyframes zoomIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .trophy-container {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: floatTrophy 2s infinite ease-in-out;
+            text-shadow: 0 0 20px rgba(251, 192, 45, 0.8);
+        }
+
+        @keyframes floatTrophy {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .victory-title {
+            font-size: 2.5em;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .victory-stats {
+            font-size: 1.2em;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        /* Efeito de Confete */
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background: #ffd300;
+            top: -20px;
+            opacity: 0;
+        }
+
+        @keyframes fall {
+            0% { opacity: 1; top: -20px; transform: translateX(0) rotate(0deg); }
+            100% { opacity: 1; top: 100vh; transform: translateX(100px) rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen" class="screen active">
+        <div class="loader"></div>
+        <h1>AgroRoots</h1>
+        <p>Preparando a terra...</p>
+    </div>
+
+    <div id="profile-screen" class="screen">
+        <div class="card">
+            <h2 id="profile-title">Crie seu Perfil</h2>
+            <p style="margin-bottom: 15px; color: #666;">Envie sua foto e escolha seu nome de agrônomo!</p>
+            
+            <div class="upload-container">
+                <div class="profile-preview-container" id="preview-container">
+                    <span class="placeholder-icon" id="placeholder-icon">📷</span>
+                    <img id="profile-img-preview" src="" alt="Sua foto">
+                </div>
+                <label for="image-upload" class="file-input-label">Selecionar Imagem (Opcional)</label>
+                <input type="file" id="image-upload" accept="image/*" onchange="previewImage(this)">
+            </div>
+
+            <input type="text" id="username" placeholder="Digite seu nome (Obrigatório)" maxlength="15">
+            <button class="btn" onclick="saveProfile()">Começar Aventura!</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen" style="padding-top: 0;">
+        <header>
+            <div class="user-info" onclick="editProfile()" title="Clique para editar perfil">
+                <div id="display-avatar" class="user-avatar">
+                    <img id="header-profile-img" src="" alt="Avatar" style="display:none;">
+                    <span id="header-placeholder" style="font-size:20px;">👨‍🌾</span>
+                </div>
+                <span id="display-name">Nome</span>
+            </div>
+            <div class="rewards">
+                🏆 Fase: <span id="display-level">1</span>/13 | ⭐ Pontos: <span id="display-points">0</span>
+            </div>
+        </header>
+
+        <div id="game-content">
+            <div class="level-info">
+                <h2 id="level-title">Fase 1</h2>
+                <p id="level-desc">Conecte o nutriente à sua função/sintoma na folha.</p>
+            </div>
+
+            <div class="game-board">
+                <div class="column" id="col-nutrients">
+                    </div>
+                <div class="column" id="col-functions">
+                    </div>
+            </div>
+        </div>
+
+        <footer>
+            Projeto Escolar de Agronomia | Produzido para a Escola <b>Aleyde Cosme</b>
+        </footer>
+    </div>
+
+    <div id="mascot-container" style="display: none;">
+        <div class="speech-bubble" id="mascot-text">
+            Olá! Eu sou o Folhito!
+        </div>
+        <div class="mascot-css" onclick="toggleMascot()">
+            <div class="mascot-mouth"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="reward-modal">
+        <div class="modal-content">
+            <h2>Fase Concluída!</h2>
+            <div class="reward-icon">🌟</div>
+            <p id="reward-message">Você dominou esses conhecimentos!</p>
+            <p><strong>+100 Pontos Agrícolas</strong></p>
+            <br>
+            <button class="btn" onclick="nextLevel()">Próxima Fase</button>
+        </div>
+    </div>
+
+    <div id="victory-screen" class="screen">
+        <div class="victory-content">
+            <div class="trophy-container">🏆</div>
+            <h1 class="victory-title">Lenda da Agronomia!</h1>
+            <p>Parabéns, <strong id="victory-name">Jogador</strong>! Você completou todas as fases com maestria.</p>
+            
+            <div class="victory-stats">
+                <p>Pontuação Final: <strong style="color: var(--secondary); font-size: 1.5em;" id="victory-points">0</strong></p>
+                <p style="font-size: 0.8em; margin-top: 10px;">A professora de Agro e o Folhito estão orgulhosos!</p>
+            </div>
+
+            <button class="btn secondary-btn" onclick="restartGame()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO DO USUÁRIO ---
+        let user = {
+            name: '',
+            imageDataUrl: '',
+            points: 0,
+            currentLevel: 0
+        };
+
+        let selectedNutrient = null;
+        let selectedFunction = null;
+        let pairsMatched = 0;
+
+        // --- DADOS DO JOGO (13 Fases Base) ---
+        const baseGameData = [
+            {
+                title: "Macronutrientes Primários",
+                desc: "Esses são os que a planta mais precisa! Relacione com suas funções nas folhas.",
+                pairs: [
+                    { id: 'N', name: 'Nitrogênio (N)', text: 'Deixa as folhas verde-escuras e ajuda no crescimento rápido.' },
+                    { id: 'P', name: 'Fósforo (P)', text: 'Essencial para a energia da célula. Falta deixa folhas arroxeadas.' },
+                    { id: 'K', name: 'Potássio (K)', text: 'Regula a abertura dos estômatos e dá resistência contra secas.' }
+                ]
+            },
+            {
+                title: "Macronutrientes Secundários",
+                desc: "Importantes para a estrutura celular e fotossíntese.",
+                pairs: [
+                    { id: 'Ca', name: 'Cálcio (Ca)', text: 'Forma a "parede" das células. Falta queima as bordas das folhas novas.' },
+                    { id: 'Mg', name: 'Magnésio (Mg)', text: 'Fica no centro da clorofila! Falta causa amarelecimento entre as nervuras.' },
+                    { id: 'S', name: 'Enxofre (S)', text: 'Ajuda na formação de proteínas. Falta deixa as folhas novas verde-claras.' }
+                ]
+            },
+            {
+                title: "Micronutrientes (Parte 1)",
+                desc: "A planta precisa em pouca quantidade, mas sem eles, ela sofre!",
+                pairs: [
+                    { id: 'Fe', name: 'Ferro (Fe)', text: 'A falta deixa as folhas novas totalmente amarelas, mas as nervuras continuam verdes.' },
+                    { id: 'Zn', name: 'Zinco (Zn)', text: 'Falta causa "encurtamento" dos galhos e folhas pequenas (roseta).' },
+                    { id: 'B', name: 'Boro (B)', text: 'Falta causa morte das pontas e deixa folhas grossas e quebradiças.' }
+                ]
+            },
+            {
+                title: "Micronutrientes (Parte 2)",
+                desc: "Mais heróis invisíveis atuando na fisiologia da folha.",
+                pairs: [
+                    { id: 'Mn', name: 'Manganês (Mn)', text: 'Falta causa clorose reticulada em folhas novas (fundo amarelo com veias verdes claras).' },
+                    { id: 'Cu', name: 'Cobre (Cu)', text: 'Falta deixa folhas novas retorcidas, deformadas e com cor verde muito escura.' },
+                    { id: 'Mo', name: 'Molibdênio (Mo)', text: 'Deficiência imita a falta de Nitrogênio, causando queima nas margens das folhas mais velhas.' }
+                ]
+            },
+            {
+                title: "Elementos Benéficos",
+                desc: "Não são vitais para todas, mas dão superpoderes às plantas.",
+                pairs: [
+                    { id: 'Si', name: 'Silício (Si)', text: 'Acumula na epiderme da folha, deixando-a mais grossa, ereta e resistente a fungos.' },
+                    { id: 'Co', name: 'Cobalto (Co)', text: 'Essencial para a fixação de N nas leguminosas, garantindo folhas super verdes.' },
+                    { id: 'Ni', name: 'Níquel (Ni)', text: 'Previne o acúmulo tóxico de ureia nas folhas, evitando pontas necrosadas.' }
+                ]
+            },
+            {
+               
