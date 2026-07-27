@@ -18,13 +18,13 @@
         <h1 class="game-title">AgroRoots</h1>
         <p class="game-subtitle">O Mestre dos Nutrientes</p>
         
-        <button class="start-btn" onclick="goToProfile()">Começar Jogo</button>
+        <button class="start-btn" onclick="startGame()">Começar Jogo</button>
     </div>
 
     <div id="profile-screen" class="screen">
         <div class="card">
             <h2 id="profile-title">Crie seu Perfil</h2>
-            <p style="margin-bottom: 15px; color: #666;">Envie sua foto e escolha seu nome de agrônomo!</p>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">Envie sua foto e escolha seu nome de agrônomo!</p>
             
             <div class="upload-container">
                 <div class="profile-preview-container" id="preview-container">
@@ -37,6 +37,43 @@
 
             <input type="text" id="username" placeholder="Digite seu nome (Obrigatório)" maxlength="15">
             <button class="btn" onclick="saveProfile()">Continuar</button>
+            <button class="btn secondary-btn" id="btn-cancel-profile" style="display: none; margin-left: 10px;" onclick="goToSettings()">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="settings-screen" class="screen">
+        <div class="card settings-card">
+            <h2>⚙️ Configurações</h2>
+            
+            <div class="settings-group">
+                <h3>Aparência</h3>
+                <button class="btn btn-outline" onclick="toggleTheme()">Alternar Tema Claro/Escuro</button>
+            </div>
+
+            <div class="settings-group">
+                <h3>Sua Conta</h3>
+                <button class="btn btn-outline" onclick="editProfile()">Editar Perfil</button>
+                <button class="btn btn-outline" onclick="viewHistory()">Histórico de Partidas</button>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Progresso</h3>
+                <button class="btn danger-btn" onclick="resetProgress()">Zerar Progresso Atual</button>
+            </div>
+
+            <button class="btn secondary-btn" style="margin-top: 15px;" onclick="closeSettings()">Voltar ao Jogo</button>
+        </div>
+    </div>
+
+    <div id="history-screen" class="screen">
+        <div class="card history-card">
+            <h2>📜 Histórico de Partidas</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Suas melhores atuações no campo!</p>
+            
+            <div class="history-list" id="history-list">
+                </div>
+
+            <button class="btn secondary-btn" style="margin-top: 20px;" onclick="goToSettings()">Voltar</button>
         </div>
     </div>
 
@@ -50,7 +87,14 @@
                 <span id="display-name">Nome</span>
             </div>
             <div class="rewards">
-                🏆 Fase: <span id="display-level">1</span>/13 | ⭐ Pontos: <span id="display-points">0</span>
+                🏆 Fase: <span id="display-level">1</span>/<span id="total-levels">15</span> | ⭐ Pontos: 
+                <span class="points-wrapper">
+                    <span id="display-points">0</span>
+                    <span id="point-loss-anim" class="point-loss-anim"></span>
+                </span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="openSettings()" title="Configurações">⚙️</button>
             </div>
         </header>
 
@@ -99,10 +143,12 @@
             
             <div class="victory-stats">
                 <p>Pontuação Final: <strong style="color: var(--secondary); font-size: 1.5em;" id="victory-points">0</strong></p>
-                <p style="font-size: 0.8em; margin-top: 10px;">A professora de Agro e o Folhito estão orgulhosos!</p>
+                <p style="color: #ff5252; margin-top: 10px;">Pontos Perdidos em Erros: <strong id="victory-lost-points">0</strong></p>
+                <p style="font-size: 0.8em; margin-top: 10px; color: var(--text-light);">A professora de Agro e o Folhito estão orgulhosos!</p>
             </div>
 
             <button class="btn secondary-btn" onclick="restartGame()">Jogar Novamente</button>
+            <button class="btn" style="margin-top: 10px;" onclick="viewHistory()">Ver Histórico</button>
         </div>
     </div>
 
