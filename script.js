@@ -3,14 +3,17 @@ let user = {
     name: '',
     imageDataUrl: '',
     points: 0,
-    currentLevel: 0
+    currentLevel: 0,
+    theme: 'light'
 };
 
+let totalPointsLost = 0; // Controla perdas da partida atual
 let selectedNutrient = null;
 let selectedFunction = null;
 let pairsMatched = 0;
+let isProcessing = false; // Flag para evitar spam de cliques
 
-// --- DADOS DO JOGO (13 Fases Base) ---
+// --- DADOS DO JOGO (15 Fases Base) ---
 const baseGameData = [
     {
         title: "Macronutrientes Primários",
@@ -128,10 +131,58 @@ const baseGameData = [
             { id: 'CoracaoOco', name: 'Podridão Apical / Coração Negro', text: 'As folhas parecem normais, mas a falta de Cálcio apodrece a ponta do fruto ou interior do caule.' },
             { id: 'Whiptail', name: '"Whiptail" (Folha de Chicote)', text: 'Em couve-flor, a falta de Molibdênio faz a folha crescer fina como um chicote.' }
         ]
+    },
+    {
+        title: "Correção de Solo e pH",
+        desc: "O ambiente radicular perfeito para a planta.",
+        pairs: [
+            { id: 'Calcario', name: 'Calcário', text: 'Corrige a acidez do solo, eleva o pH e fornece Cálcio e Magnésio.' },
+            { id: 'Gesso', name: 'Gesso Agrícola', text: 'Condicionador de subsolo. Não altera o pH, mas fornece Cálcio e Enxofre em profundidade.' },
+            { id: 'Aluminio', name: 'Alumínio Tóxico', text: 'Inibe o crescimento das raízes em solos muito ácidos, sendo neutralizado pela calagem.' }
+        ]
+    },
+    {
+        title: "Fixação Biológica de Nitrogênio (FBN)",
+        desc: "A magia da simbiose nas leguminosas.",
+        pairs: [
+            { id: 'Rizobio', name: 'Rizóbio', text: 'Bactéria do solo que forma nódulos nas raízes e captura Nitrogênio do ar.' },
+            { id: 'LegHemo', name: 'Leg-hemoglobina', text: 'Proteína avermelhada que protege as bactérias do oxigênio dentro do nódulo.' },
+            { id: 'MoCo', name: 'Molibdênio e Cobalto', text: 'Micronutrientes indispensáveis para que a enzima nitrogenase funcione no nódulo.' }
+        ]
     }
 ];
 
 let gameData = [];
+
+// --- INICIALIZAÇÃO E LOCAL STORAGE ---
+window.onload = () => {
+    loadGameData();
+    document.getElementById('total-levels').innerText = baseGameData.length;
+};
+
+function loadGameData() {
+    const savedUser = localStorage.getItem('agroRootsUser');
+    if (savedUser) {
+        user = JSON.parse(savedUser);
+        applyTheme();
+    }
+}
+
+function saveGameData() {
+    localStorage.setItem('agroRootsUser', JSON.stringify(user));
+}
+
+function saveHistory() {
+    let history = JSON.parse(localStorage.getItem('agroRootsHistory')) || [];
+    history.push({
+        score: user.points,
+        lost: totalPointsLost,
+        date: new Date().toLocaleDateString()
+    });
+    // Ordena do maior para o menor
+    history.sort((a, b) => b.score - a.score);
+    localStorage.setItem('agroRootsHistory', JSON.stringify(history));
+}
 
 // --- NAVEGAÇÃO DE TELAS ---
 function switchScreen(screenId) {
@@ -139,9 +190,29 @@ function switchScreen(screenId) {
     document.getElementById(screenId).classList.add('active');
 }
 
-// --- NAVEGAÇÃO DO BOTÃO "COMEÇAR JOGO" ---
-function goToProfile() {
-    switchScreen('profile-screen');
+function startGame() {
+    if (user.name) {
+        // Já tem perfil salvo
+        setupHeader();
+        switchScreen('game-screen');
+        document.getElementById('mascot-container').style.display = 'flex';
+        
+        if (user.currentLevel === 0) {
+            gameData = shuffleArray([...baseGameData]); 
+            loadLevel(0);
+        } else if (user.currentLevel >= baseGameData.length) {
+            restartGame();
+        } else {
+            // Continua de onde parou (simula recarregamento do array, idealmente seria salvo)
+            gameData = shuffleArray([...baseGameData]);
+            loadLevel(user.currentLevel);
+            setMascotText(`Que bom te ver de volta, ${user.name}! Vamos continuar de onde paramos.`);
+        }
+    } else {
+        // Primeira vez
+        switchScreen('profile-screen');
+        document.getElementById('btn-cancel-profile').style.display = 'none';
+    }
 }
 
 // --- PROCESSAMENTO DA IMAGEM ---
@@ -160,7 +231,7 @@ function previewImage(input) {
     }
 }
 
-// --- PERFIL E INÍCIO DO JOGO ---
+// --- PERFIL E CONFIGURAÇÕES ---
 function saveProfile() {
     const nameInput = document.getElementById('username').value.trim();
     if(!nameInput) {
@@ -168,9 +239,23 @@ function saveProfile() {
         return;
     }
     user.name = nameInput;
+    saveGameData();
+    setupHeader();
     
+    switchScreen('game-screen');
+    document.getElementById('mascot-container').style.display = 'flex';
+    
+    if(user.currentLevel === 0 && pairsMatched === 0) {
+        gameData = shuffleArray([...baseGameData]); 
+        loadLevel(0);
+    } else {
+        setMascotText(`Perfil atualizado com sucesso, ${user.name}!`);
+    }
+}
+
+function setupHeader() {
     document.getElementById('display-name').innerText = user.name;
-    
+    document.getElementById('display-points').innerText = user.points;
     const headerImg = document.getElementById('header-profile-img');
     const headerPlaceholder = document.getElementById('header-placeholder');
     
@@ -182,28 +267,94 @@ function saveProfile() {
         headerImg.style.display = 'none';
         headerPlaceholder.style.display = 'block';
     }
-    
-    switchScreen('game-screen');
-    document.getElementById('mascot-container').style.display = 'flex';
-    
-    if(user.currentLevel === 0) {
-        gameData = shuffleArray([...baseGameData]); 
-        loadLevel(0);
-    } else {
-        setMascotText(`Perfil atualizado com sucesso, ${user.name}! Vamos continuar jogando!`);
-    }
 }
 
 function editProfile() {
     document.getElementById('profile-title').innerText = "Editar Perfil";
+    document.getElementById('username').value = user.name;
+    if(user.imageDataUrl) {
+        document.getElementById('profile-img-preview').src = user.imageDataUrl;
+        document.getElementById('profile-img-preview').style.display = 'block';
+        document.getElementById('placeholder-icon').style.display = 'none';
+    }
+    document.getElementById('btn-cancel-profile').style.display = 'inline-block';
     switchScreen('profile-screen');
     document.getElementById('mascot-container').style.display = 'none';
+}
+
+function openSettings() {
+    switchScreen('settings-screen');
+    document.getElementById('mascot-container').style.display = 'none';
+}
+
+function closeSettings() {
+    switchScreen('game-screen');
+    document.getElementById('mascot-container').style.display = 'flex';
+}
+
+function goToSettings() {
+    switchScreen('settings-screen');
+}
+
+function toggleTheme() {
+    user.theme = user.theme === 'light' ? 'dark' : 'light';
+    applyTheme();
+    saveGameData();
+}
+
+function applyTheme() {
+    if(user.theme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    } else {
+        document.body.removeAttribute('data-theme');
+    }
+}
+
+function viewHistory() {
+    const historyList = document.getElementById('history-list');
+    historyList.innerHTML = '';
+    let history = JSON.parse(localStorage.getItem('agroRootsHistory')) || [];
+
+    if(history.length === 0) {
+        historyList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhuma partida registrada ainda.</p>';
+    } else {
+        history.forEach((match, index) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div class="rank">#${index + 1}</div>
+                <div class="details">
+                    <strong>${match.score} Pontos</strong><br>
+                    <span style="color: var(--error-color); font-size: 0.8em;">-${match.lost} perdidos</span><br>
+                    <span style="color: var(--text-muted); font-size: 0.8em;">${match.date}</span>
+                </div>
+            `;
+            historyList.appendChild(div);
+        });
+    }
+    switchScreen('history-screen');
+    document.getElementById('mascot-container').style.display = 'none';
+}
+
+function resetProgress() {
+    if(confirm("Tem certeza que deseja zerar seu progresso atual? Seu perfil e histórico serão mantidos.")) {
+        user.points = 0;
+        user.currentLevel = 0;
+        totalPointsLost = 0;
+        saveGameData();
+        setupHeader();
+        gameData = shuffleArray([...baseGameData]);
+        closeSettings();
+        loadLevel(0);
+    }
 }
 
 function restartGame() {
     user.points = 0;
     user.currentLevel = 0;
+    totalPointsLost = 0;
     document.getElementById('display-points').innerText = '0';
+    saveGameData();
     
     document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
 
@@ -243,9 +394,12 @@ function shuffleArray(array) {
 
 function loadLevel(levelIndex) {
     user.currentLevel = levelIndex;
+    saveGameData();
+    
     pairsMatched = 0;
     selectedNutrient = null;
     selectedFunction = null;
+    isProcessing = false;
 
     document.getElementById('display-level').innerText = levelIndex + 1;
     
@@ -283,13 +437,13 @@ function loadLevel(levelIndex) {
 
     if(levelIndex === 0) {
         setMascotText(`Vamos lá, ${user.name}! Clique em um conceito e tente achar a descrição certa na outra coluna!`);
-    } else if (levelIndex === 6) {
-        setMascotText(`Uau, ${user.name}! Já estamos na metade do caminho!`);
+    } else if (levelIndex === 7) {
+        setMascotText(`Uau, ${user.name}! Já passamos da metade do caminho! Continue assim.`);
     }
 }
 
 function handleNutrientClick(element, id) {
-    if(element.classList.contains('matched')) return;
+    if(isProcessing || element.classList.contains('matched')) return;
     
     document.querySelectorAll('.nutrient-card').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
@@ -299,7 +453,7 @@ function handleNutrientClick(element, id) {
 }
 
 function handleFunctionClick(element, id) {
-    if(element.classList.contains('matched')) return;
+    if(isProcessing || element.classList.contains('matched')) return;
 
     document.querySelectorAll('.function-card').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
@@ -311,10 +465,12 @@ function handleFunctionClick(element, id) {
 function checkMatch() {
     if(selectedNutrient && selectedFunction) {
         if(selectedNutrient.id === selectedFunction.id) {
+            // Acertou
             selectedNutrient.el.classList.replace('selected', 'matched');
             selectedFunction.el.classList.replace('selected', 'matched');
             user.points += 20;
-            document.getElementById('display-points').innerText = user.points;
+            updatePointsDisplay();
+            saveGameData();
             
             pairsMatched++;
             setMascotText(`Muito bem, ${user.name}! Conexão perfeita! 🌱`);
@@ -326,23 +482,54 @@ function checkMatch() {
                 setTimeout(showReward, 500);
             }
         } else {
+            // Errou
+            isProcessing = true; // Trava cliques rápidos
             selectedNutrient.el.classList.add('wrong');
             selectedFunction.el.classList.add('wrong');
-            setMascotText(`Opa, ${user.name}, acho que essa não é a relação correta. Tente novamente!`);
+            
+            setMascotText(`Opa, ${user.name}, acho que essa não é a relação correta. Você perdeu 10 pontos. Tente novamente!`);
+            
+            // Subtrai pontos (min 0)
+            let previousPoints = user.points;
+            user.points = Math.max(0, user.points - 10);
+            let lostAmount = previousPoints - user.points;
+            totalPointsLost += lostAmount;
+            
+            updatePointsDisplay();
+            saveGameData();
+            
+            if(lostAmount > 0) {
+                triggerPointLossAnimation(lostAmount);
+            }
 
             setTimeout(() => {
                 selectedNutrient.el.classList.remove('wrong', 'selected');
                 selectedFunction.el.classList.remove('wrong', 'selected');
                 selectedNutrient = null;
                 selectedFunction = null;
-            }, 500);
+                isProcessing = false; // Libera cliques
+            }, 700); // 700ms de punição visual
         }
     }
 }
 
+function updatePointsDisplay() {
+    document.getElementById('display-points').innerText = user.points;
+}
+
+function triggerPointLossAnimation(amount) {
+    const animEl = document.getElementById('point-loss-anim');
+    animEl.innerText = `-${amount}`;
+    animEl.classList.remove('show');
+    // Força reflow para reiniciar animação
+    void animEl.offsetWidth; 
+    animEl.classList.add('show');
+}
+
 function showReward() {
     user.points += 100;
-    document.getElementById('display-points').innerText = user.points;
+    updatePointsDisplay();
+    saveGameData();
     
     document.getElementById('reward-message').innerText = `Você dominou esses conhecimentos, ${user.name}!`;
     document.getElementById('reward-modal').style.display = 'flex';
@@ -361,7 +548,10 @@ function triggerVictory() {
     document.getElementById('mascot-container').style.display = 'none';
     document.getElementById('victory-name').innerText = user.name;
     document.getElementById('victory-points').innerText = user.points + ' PONTOS';
+    document.getElementById('victory-lost-points').innerText = totalPointsLost;
     
+    saveHistory(); // Salva no histórico local
+
     switchScreen('victory-screen');
     generateConfetti();
 }
@@ -385,5 +575,4 @@ function generateConfetti() {
         
         screen.appendChild(confetti);
     }
-      }
-      
+}
