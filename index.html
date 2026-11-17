@@ -1,157 +1,194 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgroRoots: O Mestre dos Nutrientes</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Faltas — SEDU-ES</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <main class="app">
+    <header>
+      <span class="badge-sedu">SEDU-ES • Controle de Frequência</span>
+      <h1>Calculadora de Faltas Escolares</h1>
+      <p class="subtitle">Mínimo de 75% de presença (limite de 25% de faltas = 350 aulas no ano)</p>
+    </header>
 
-    <div id="start-screen" class="screen active">
-        <div class="css-logo">
-            <div class="leaf left"></div>
-            <div class="leaf right"></div>
-            <div class="stem"></div>
+    <section class="card">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn active" id="tab-trimestres" data-tab="trimestres">
+          Por Trimestre (1º, 2º e 3º)
+        </button>
+        <button type="button" class="tab-btn" id="tab-total" data-tab="total">
+          Total Já Somado
+        </button>
+      </div>
+
+      <!-- Aba 1: Por Trimestre -->
+      <div class="tab-panel active" id="panel-trimestres">
+        <div class="grid-3">
+          <div class="field">
+            <label for="input-t1">1º Trimestre (aulas)</label>
+            <input type="number" id="input-t1" min="0" step="1" inputmode="numeric" placeholder="0" />
+          </div>
+          <div class="field">
+            <label for="input-t2">2º Trimestre (aulas)</label>
+            <input type="number" id="input-t2" min="0" step="1" inputmode="numeric" placeholder="0" />
+          </div>
+          <div class="field">
+            <label for="input-t3">3º Trimestre (aulas)</label>
+            <input type="number" id="input-t3" min="0" step="1" inputmode="numeric" placeholder="0" />
+          </div>
         </div>
-        
-        <h1 class="game-title">AgroRoots</h1>
-        <p class="game-subtitle">O Mestre dos Nutrientes</p>
-        
-        <button class="start-btn" onclick="startGame()">Começar Jogo</button>
-    </div>
-
-    <div id="profile-screen" class="screen">
-        <div class="card">
-            <h2 id="profile-title">Crie seu Perfil</h2>
-            <p style="margin-bottom: 15px; color: var(--text-muted);">Envie sua foto e escolha seu nome de agrônomo!</p>
-            
-            <div class="upload-container">
-                <div class="profile-preview-container" id="preview-container">
-                    <span class="placeholder-icon" id="placeholder-icon">📷</span>
-                    <img id="profile-img-preview" src="" alt="Sua foto">
-                </div>
-                <label for="image-upload" class="file-input-label">Selecionar Imagem (Opcional)</label>
-                <input type="file" id="image-upload" accept="image/*" onchange="previewImage(this)">
-            </div>
-
-            <input type="text" id="username" placeholder="Digite seu nome (Obrigatório)" maxlength="15">
-            <button class="btn" onclick="saveProfile()">Continuar</button>
-            <button class="btn secondary-btn" id="btn-cancel-profile" style="display: none; margin-left: 10px;" onclick="goToSettings()">Cancelar</button>
+        <div class="helper-bar">
+          <span>Soma dos 3 trimestres:</span>
+          <strong id="soma-trimestres-preview">0 faltas</strong>
         </div>
-    </div>
+      </div>
 
-    <div id="settings-screen" class="screen">
-        <div class="card settings-card">
-            <h2>⚙️ Configurações</h2>
-            
-            <div class="settings-group">
-                <h3>Aparência</h3>
-                <button class="btn btn-outline" onclick="toggleTheme()">Alternar Tema Claro/Escuro</button>
-            </div>
-
-            <div class="settings-group">
-                <h3>Sua Conta</h3>
-                <button class="btn btn-outline" onclick="editProfile()">Editar Perfil</button>
-                <button class="btn btn-outline" onclick="viewHistory()">Histórico de Partidas</button>
-            </div>
-            
-            <div class="settings-group">
-                <h3>Progresso</h3>
-                <button class="btn danger-btn" onclick="resetProgress()">Zerar Progresso Atual</button>
-            </div>
-
-            <button class="btn secondary-btn" style="margin-top: 15px;" onclick="closeSettings()">Voltar ao Jogo</button>
+      <!-- Aba 2: Total Já Somado -->
+      <div class="tab-panel" id="panel-total">
+        <div class="field">
+          <label for="input-total-direto">Total de faltas acumuladas no SEGES (aulas)</label>
+          <input type="number" id="input-total-direto" min="0" step="1" inputmode="numeric" placeholder="Ex: 84" />
         </div>
-    </div>
-
-    <div id="history-screen" class="screen">
-        <div class="card history-card">
-            <h2>📜 Histórico de Partidas</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Suas melhores atuações no campo!</p>
-            
-            <div class="history-list" id="history-list">
-                </div>
-
-            <button class="btn secondary-btn" style="margin-top: 20px;" onclick="goToSettings()">Voltar</button>
+        <div class="helper-bar">
+          <span>Modo ativo:</span>
+          <strong>Contagem direta do total</strong>
         </div>
-    </div>
+      </div>
 
-    <div id="game-screen" class="screen" style="padding-top: 0;">
-        <header>
-            <div class="user-info" onclick="editProfile()" title="Clique para editar perfil">
-                <div id="display-avatar" class="user-avatar">
-                    <img id="header-profile-img" src="" alt="Avatar" style="display:none;">
-                    <span id="header-placeholder" style="font-size:20px;">👨‍🌾</span>
-                </div>
-                <span id="display-name">Nome</span>
-            </div>
-            <div class="rewards">
-                🏆 Fase: <span id="display-level">1</span>/<span id="total-levels">15</span> | ⭐ Pontos: 
-                <span class="points-wrapper">
-                    <span id="display-points">0</span>
-                    <span id="point-loss-anim" class="point-loss-anim"></span>
-                </span>
-            </div>
-            <div class="header-actions">
-                <button class="icon-btn" onclick="openSettings()" title="Configurações">⚙️</button>
-            </div>
-        </header>
+      <div class="actions-row">
+        <button type="button" class="btn-secondary" id="btn-toggle-config">
+          ⚙️ Configurar aulas/dia e calendário
+        </button>
+        <button type="button" class="btn-danger-outline" id="btn-limpar">
+          Limpar campos
+        </button>
+      </div>
 
-        <div id="game-content">
-            <div class="level-info">
-                <h2 id="level-title">Fase 1</h2>
-                <p id="level-desc">Conecte o nutriente à sua função/sintoma na folha.</p>
-            </div>
-
-            <div class="game-board">
-                <div class="column" id="col-nutrients"></div>
-                <div class="column" id="col-functions"></div>
-            </div>
+      <div class="config-panel" id="config-panel">
+        <div class="grid-3">
+          <div class="field">
+            <label for="cfg-aulas-dia">Aulas por dia</label>
+            <input type="number" id="cfg-aulas-dia" min="1" max="15" step="1" value="7" />
+          </div>
+          <div class="field">
+            <label for="cfg-total-aulas">Total de aulas no ano</label>
+            <input type="number" id="cfg-total-aulas" min="100" step="10" value="1400" />
+          </div>
+          <div class="field">
+            <label for="cfg-data-fim">Fim das aulas</label>
+            <input type="date" id="cfg-data-fim" value="2026-12-15" />
+          </div>
         </div>
 
-        <footer>
-            Projeto Escolar de Agronomia | Produzido para a Escola <b>Aleyde Cosme</b>
-        </footer>
-    </div>
-
-    <div id="mascot-container" style="display: none;">
-        <div class="speech-bubble" id="mascot-text">
-            Olá! Eu sou o Folhito!
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="cfg-incluir-hoje" checked />
+            <span>Incluir o dia de hoje na contagem de dias letivos restantes</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cfg-descontar-feriados" checked />
+            <span>Descontar feriados nacionais (ex: 20/11 Consciência Negra)</span>
+          </label>
         </div>
-        <div class="mascot-css" onclick="toggleMascot()">
-            <div class="mascot-mouth"></div>
+
+        <p class="stat-sub" style="margin-top: 10px;" id="cfg-resumo">
+          Regra atual: 7 aulas/dia • Limite máximo de 350 faltas (25% de 1400 aulas).
+        </p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="status-header">
+        <div>
+          <span class="stat-label">Situação Atual</span>
+          <h2 id="status-titulo" style="font-size: 1.15rem; margin-top: 2px;">Frequência Segura</h2>
         </div>
-    </div>
+        <span class="status-pill" id="status-pill">0% do limite usado</span>
+      </div>
 
-    <div class="modal" id="reward-modal">
-        <div class="modal-content">
-            <h2>Fase Concluída!</h2>
-            <div class="reward-icon">🌟</div>
-            <p id="reward-message">Você dominou esses conhecimentos!</p>
-            <p><strong>+100 Pontos Agrícolas</strong></p>
-            <br>
-            <button class="btn" onclick="nextLevel()">Próxima Fase</button>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="meta-faltas">0 / 350 faltas permitidas</span>
+        <span id="meta-frequencia">Frequência: 100.0%</span>
+      </div>
+
+      <div class="results-grid">
+        <div class="stat-box">
+          <div class="stat-label">Total de Faltas</div>
+          <div class="stat-value" id="res-total-faltas">0 aulas</div>
+          <div class="stat-sub" id="res-dias-faltados">Equivale a 0 dias inteiros</div>
         </div>
-    </div>
 
-    <div id="victory-screen" class="screen">
-        <div class="victory-content">
-            <div class="trophy-container">🏆</div>
-            <h1 class="victory-title">Lenda da Agronomia!</h1>
-            <p>Parabéns, <strong id="victory-name">Jogador</strong>! Você completou todas as fases com maestria.</p>
-            
-            <div class="victory-stats">
-                <p>Pontuação Final: <strong style="color: var(--secondary); font-size: 1.5em;" id="victory-points">0</strong></p>
-                <p style="color: #ff5252; margin-top: 10px;">Pontos Perdidos em Erros: <strong id="victory-lost-points">0</strong></p>
-                <p style="font-size: 0.8em; margin-top: 10px; color: var(--text-light);">A professora de Agro e o Folhito estão orgulhosos!</p>
-            </div>
-
-            <button class="btn secondary-btn" onclick="restartGame()">Jogar Novamente</button>
-            <button class="btn" style="margin-top: 10px;" onclick="viewHistory()">Ver Histórico</button>
+        <div class="stat-box">
+          <div class="stat-label">Frequência Geral</div>
+          <div class="stat-value" id="res-frequencia">100.0%</div>
+          <div class="stat-sub">Mínimo exigido: 75.0%</div>
         </div>
-    </div>
 
-    <script src="script.js"></script>
+        <div class="stat-box highlight-ok">
+          <div class="stat-label">Ainda pode faltar (sem reprovar)</div>
+          <div class="stat-value" id="res-pode-dias">50 dias</div>
+          <div class="stat-sub" id="res-pode-aulas">Ou 350 aulas no total</div>
+        </div>
+
+        <div class="stat-box highlight-danger">
+          <div class="stat-label">Reprova se faltar</div>
+          <div class="stat-value" id="res-reprova-dias">51 dias</div>
+          <div class="stat-sub" id="res-reprova-aulas">Ao atingir 351 faltas</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova Seção: Reta Final até 15 de Dezembro -->
+    <section class="card" id="card-reta-final">
+      <div class="status-header">
+        <div>
+          <span class="stat-label" id="fim-subtitulo-data">Reta Final • Encerramento em 15/12/2026</span>
+          <h2 style="font-size: 1.15rem; margin-top: 2px;">Contagem até o Fim das Aulas</h2>
+        </div>
+        <span class="status-pill" id="fim-status-pill">Pode faltar até o fim</span>
+      </div>
+
+      <div class="verdict-banner ok" id="fim-veredito-box">
+        <div class="verdict-title" id="fim-veredito-titulo">
+          SIM! Você consegue faltar até as aulas acabarem sem reprovar
+        </div>
+        <p class="verdict-desc" id="fim-veredito-desc">
+          Calculando dias letivos restantes até 15/12/2026...
+        </p>
+      </div>
+
+      <div class="results-grid-3">
+        <div class="stat-box">
+          <div class="stat-label">Dias Letivos Restantes</div>
+          <div class="stat-value" id="fim-dias-restantes">0 dias</div>
+          <div class="stat-sub" id="fim-aulas-restantes">0 aulas até 15/12</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">Presença Mínima Obrigatória</div>
+          <div class="stat-value" id="fim-presenca-dias">0 dias</div>
+          <div class="stat-sub" id="fim-presenca-aulas">Para não reprovar</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">Se Faltar Tudo Até 15/12</div>
+          <div class="stat-value" id="fim-projecao-faltas">0 faltas</div>
+          <div class="stat-sub" id="fim-projecao-freq">Frequência final: 100.0%</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Cálculo baseado em 200 dias letivos × 7 aulas/dia = 1.400 aulas (limite de 25% = 350 faltas; 351 faltas = reprovação) • Fim das aulas: 15 de dezembro.
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
